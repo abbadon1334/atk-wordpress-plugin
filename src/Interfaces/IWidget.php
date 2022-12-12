@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Atk4\AtkWordpress\Interfaces;
 
 use Atk4\AtkWordpress\AtkWordpressView;
@@ -21,9 +23,6 @@ interface IWidget
      * Called by the Widget component class on WP_Widget::form() method.
      * This method will be called prior to echo the html for this view, allowing
      * developer to add field input to the view.
-     *
-     * @param AtkWordpressView  $view
-     * @param array $instance
      *
      * @return AtkWordpressView $view the view to echo in form() method
      */

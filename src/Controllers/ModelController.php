@@ -48,7 +48,7 @@ class ModelController extends AbstractController
             }
 
             $stmt = sprintf(
-                /* @lang mysql */ 
+                // @lang mysql
                 'CREATE TABLE `%s` (%s%s%s)%sCOLLATE {%s}',
                 $model->table,
                 \PHP_EOL,

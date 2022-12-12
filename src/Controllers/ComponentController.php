@@ -94,15 +94,13 @@ class ComponentController extends AbstractController
      * Return a component from the components array
      * base on it's key value regardless of the component type.
      *
-     * @param string $search
-     * @param array  $components
+     * @param array $components
      *
      * @return array|mixed
      */
     public function searchComponentByKey(string $search)
     {
         foreach ($this->components as $keyType => $components) {
-
             if ($keyType === $search) {
                 return $components;
             }
@@ -111,7 +109,7 @@ class ComponentController extends AbstractController
                 continue;
             }
 
-            foreach($components as $key => $component) {
+            foreach ($components as $key => $component) {
                 if ($key === $search) {
                     return $component;
                 }
@@ -120,6 +118,7 @@ class ComponentController extends AbstractController
 
         return null;
     }
+
     /**
      * Get meta data value associated to a post.
      *
@@ -133,9 +132,7 @@ class ComponentController extends AbstractController
     /**
      * Save meta data associated to a post.
      *
-     * @param int    $postID
-     * @param string $postKey
-     * @param mixed  $postValue
+     * @param mixed $postValue
      *
      * @return mixed
      */

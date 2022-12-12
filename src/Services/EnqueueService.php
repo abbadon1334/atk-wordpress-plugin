@@ -44,26 +44,24 @@ class EnqueueService extends AbstractService
             $component = $ctrl->getComponentsByType('dashboard');
         }
 
-
         $jsFiles = $this->getPlugin()->getConfig('enqueue/admin/js', []);
         $cssFiles = $this->getPlugin()->getConfig('enqueue/admin/css', []);
 
         if (isset($component)) {
-
             $jsFiles = array_merge($jsFiles, $component['js'] ?? []);
             $cssFiles = array_merge($cssFiles, $component['css'] ?? []);
 
             // Load our register atk js and css.
-            foreach($this->getPlugin()->getConfig('enqueue/atk/js') as $key => $url) {
+            foreach ($this->getPlugin()->getConfig('enqueue/atk/js') as $key => $url) {
                 wp_enqueue_script($key);
             }
 
-            foreach($this->getPlugin()->getConfig('enqueue/atk/css') as $key => $url) {
+            foreach ($this->getPlugin()->getConfig('enqueue/atk/css') as $key => $url) {
                 wp_enqueue_style($key);
             }
         }
 
-        $this->enqueueFiles($jsFiles,$cssFiles);
+        $this->enqueueFiles($jsFiles, $cssFiles);
     }
 
     public function registerAtkAssets()
@@ -95,11 +93,13 @@ class EnqueueService extends AbstractService
         }
     }
 
-    private function getPluginBaseUrl(): string {
+    private function getPluginBaseUrl(): string
+    {
         return $this->getPlugin()->getPluginBaseUrl();
     }
 
-    private function buildPathAsset(?string $relative_path = null) {
+    private function buildPathAsset(string $relative_path = null)
+    {
         if (empty($relative_path)) {
             return '';
         }
@@ -132,7 +132,7 @@ class EnqueueService extends AbstractService
         }
     }
 
-    private function enqueueFrontFiles(?string $hook = null)
+    private function enqueueFrontFiles(string $hook = null)
     {
         if (is_admin()) {
             return;
@@ -155,11 +155,11 @@ class EnqueueService extends AbstractService
         }
 
         // Load our register atk js and css.
-        foreach($this->getPlugin()->getConfig('enqueue/atk/js') as $key => $url) {
+        foreach ($this->getPlugin()->getConfig('enqueue/atk/js') as $key => $url) {
             wp_enqueue_script($key);
         }
 
-        foreach($this->getPlugin()->getConfig('enqueue/atk/css') as $key => $url) {
+        foreach ($this->getPlugin()->getConfig('enqueue/atk/css') as $key => $url) {
             wp_enqueue_style($key);
         }
 

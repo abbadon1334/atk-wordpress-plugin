@@ -16,7 +16,7 @@ class WidgetService extends AbstractService
 
         foreach ($widgets as $key => $widget) {
             $widget['id'] = $key;
-            //$widget['show_instance_in_rest'] = true;
+            // $widget['show_instance_in_rest'] = true;
             $this->registerWidget($key, $widget);
         }
     }
@@ -26,7 +26,6 @@ class WidgetService extends AbstractService
         $this->widgets[$id] = $widget;
 
         add_action('widgets_init', function () use ($id, $widget) {
-
             global $wp_widget_factory;
 
             /** @var WidgetComponent $widget */

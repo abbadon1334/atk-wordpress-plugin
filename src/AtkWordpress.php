@@ -288,17 +288,11 @@ abstract class AtkWordpress implements IPlugin
         $this->atkApp->callExit();
     }
 
-    /**
-     * @return string
-     */
     public function getPluginBaseUrl(): string
     {
         return $this->pluginBaseUrl;
     }
 
-    /**
-     * @return string
-     */
     public function getPluginBasePath(): string
     {
         return $this->pluginBasePath;

@@ -28,11 +28,8 @@ class PanelService extends AbstractService
             $this->panels[$key] = $panel;
         }
 
-
         add_action('admin_menu', function () use ($panels) {
-
             foreach ($panels as $key => $panel) {
-
                 $type = $panel['type'] ?? '';
                 $parent = $panel['parent'] ?? '';
 
@@ -42,6 +39,7 @@ class PanelService extends AbstractService
 
                 if ($type === 'wp-sub-panel') {
                     $this->registerWpSubPanel($key, $panel);
+
                     continue;
                 }
 

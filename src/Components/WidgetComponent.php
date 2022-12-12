@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Atk4\AtkWordpress\Components;
 
-use Atk4\Ui\Exception;
 use Atk4\AtkWordpress\AtkWordpress;
 use Atk4\AtkWordpress\Interfaces\IWidget;
 
@@ -48,7 +49,7 @@ abstract class WidgetComponent extends \WP_Widget implements IWidget
     }
 
     /**
-     * Widget Frontend
+     * Widget Frontend.
      *
      * The \Wp_Widget::widget() method.
      * If child class implement WidgetInterface, this method will call the onWidget method
@@ -76,7 +77,7 @@ abstract class WidgetComponent extends \WP_Widget implements IWidget
     }
 
     /**
-     * Widget Backend
+     * Widget Backend.
      *
      * The \Wp_Widget::form() method.
      * If child class implement WidgetInterface, this method will call the onForm method
@@ -94,7 +95,7 @@ abstract class WidgetComponent extends \WP_Widget implements IWidget
     }
 
     /**
-     * Widget Backend update
+     * Widget Backend update.
      *
      * The \Wp_Widget::update() method.
      * If child class implement WidgetInterface, this method will call the onUpdate method
@@ -102,8 +103,6 @@ abstract class WidgetComponent extends \WP_Widget implements IWidget
      *
      * @param array $new_instance
      * @param array $old_instance
-     *
-     * @return array
      */
     public function update($new_instance, $old_instance): array
     {
