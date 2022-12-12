@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Atk4\AtkWordpress\Services;
 
+use Atk4\AtkWordpress\Helpers\WP;
+
 class EnqueueService extends AbstractService
 {
     public function register(): void
@@ -14,7 +16,7 @@ class EnqueueService extends AbstractService
 
     private function enqueueAdminFiles(string $hook)
     {
-        if (!is_admin()) {
+        if (!WP::isAdmin()) {
             return;
         }
 
@@ -134,11 +136,20 @@ class EnqueueService extends AbstractService
 
     private function enqueueFrontFiles(string $hook = null)
     {
-        if (is_admin()) {
+        if (WP::isAdmin()) {
             return;
         }
 
         $this->registerAtkAssets();
+
+        // Load our register atk js and css.
+        foreach ($this->getPlugin()->getConfig('enqueue/atk/js') as $key => $url) {
+            wp_enqueue_script($key);
+        }
+
+        foreach ($this->getPlugin()->getConfig('enqueue/atk/css') as $key => $url) {
+            wp_enqueue_style($key);
+        }
 
         $this->enqueueFiles(
             $this->getPlugin()->getConfig('enqueue/front/js', []),
@@ -152,15 +163,6 @@ class EnqueueService extends AbstractService
 
         if ($use_atk) {
             $this->enqueueFrontFiles();
-        }
-
-        // Load our register atk js and css.
-        foreach ($this->getPlugin()->getConfig('enqueue/atk/js') as $key => $url) {
-            wp_enqueue_script($key);
-        }
-
-        foreach ($this->getPlugin()->getConfig('enqueue/atk/css') as $key => $url) {
-            wp_enqueue_style($key);
         }
 
         $this->enqueueFiles($shortcode['js'] ?? [], $shortcode['css'] ?? []);
