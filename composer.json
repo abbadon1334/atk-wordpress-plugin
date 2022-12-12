@@ -1,12 +1,12 @@
 {
-    "name": "abbadon1334/direct-order",
-    "description": "description",
+    "name": "abbadon1334/atk-wordpress-plugin",
+    "description": "Use ATK in Wordpress framework",
     "minimum-stability": "dev",
     "license": "library",
     "authors": [
         {
-            "name": "abbadon1334",
-            "email": "email@example.com"
+            "name": "Francesco Danti",
+            "email": "fdanti@gmail.com"
         }
     ],
     "require": {
