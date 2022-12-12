@@ -115,10 +115,10 @@ class AtkWordpressApp extends \Atk4\Ui\App
             return $page;
         }
 
-        $wpPage = 'admin';
+        $requested_wp_page = $_REQUEST['page'] ?? null;
 
-        if ($wpPageRequest = @$_REQUEST['page']) {
-            $extraArgs['page'] = $wpPageRequest;
+        if ($requested_wp_page) {
+            $extraArgs['page'] = $requested_wp_page;
         }
 
         return parent::url($page, $needRequestUri, $extraArgs);
