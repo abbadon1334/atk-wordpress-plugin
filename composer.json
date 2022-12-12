@@ -1,0 +1,28 @@
+{
+    "name": "abbadon1334/direct-order",
+    "description": "description",
+    "minimum-stability": "dev",
+    "license": "library",
+    "authors": [
+        {
+            "name": "abbadon1334",
+            "email": "email@example.com"
+        }
+    ],
+    "require": {
+        "atk4/ui": "^4.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.9.2",
+        "friendsofphp/php-cs-fixer": "^v3.13.0"
+    },
+    "scripts" : {
+        "fix": "php-cs-fixer fix",
+        "stan": "phpstan analyse"
+    },
+    "autoload": {
+        "psr-4": {
+            "Atk4\\AtkWordpress\\": "src/"
+        }
+    }
+}

@@ -1,0 +1,61 @@
+.ui.container {
+    margin-top: 1em;
+}
+
+/**fix modal display **/
+.ui.dimmer {
+    z-index: 10000 !important;
+}
+
+/** fix ui menu **/
+.ui.menu, .ui.menu .menu {
+    padding-top: 0px;
+}
+
+/** Fix button in general **/
+.ui.button, .ui.icon.button {
+    /*margin: 2em 0.25em 0em 0em;*/
+    /*padding: 0.785em 1.5em 1.785em;*/
+}
+
+.ui.compact.icon.button {
+    margin-top: 0em;
+    margin-bottom: 0em;
+}
+
+/** Fix button using right class **/
+.ui.button {
+    float: none;
+}
+
+/** Fix button using an arrow icon **/
+.ui > .arrow:after {
+    background: none;
+}
+
+/** Fix button disabled state **/
+.ui.disabled.button {
+    background-color: lightgrey !important;
+    color: rgba(0,0,0,.6) !important;
+}
+
+/** Fix Label **/
+.ui.labeled.button > .ui.label {
+    padding: 1.2em .833em;
+}
+
+/** fix button after input **/
+.ui.input > .ui.button {
+    height: auto;
+}
+
+/** fix submit button spacing in modal form **/
+.ui.clearing.hidden.divider {
+    display: block;
+    margin-bottom: 4px;
+}
+
+/** Fix jsQuickSerch **/
+i.search {
+    background-color: transparent;
+}
