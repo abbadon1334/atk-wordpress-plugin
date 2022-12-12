@@ -2,7 +2,8 @@
     "name": "abbadon1334/atk-wordpress-plugin",
     "description": "Use ATK in Wordpress framework",
     "minimum-stability": "dev",
-    "license": "library",
+    "license": "MIT",
+    "type": "library",
     "authors": [
         {
             "name": "Francesco Danti",
