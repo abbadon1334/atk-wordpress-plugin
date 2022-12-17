@@ -12,6 +12,10 @@ use Atk4\Core\CollectionTrait;
 use Atk4\Core\ConfigTrait;
 use Atk4\Core\Factory;
 use Atk4\Data\Persistence\Sql;
+use Atk4\Ui\App;
+use Atk4\Ui\Exception\LateOutputError;
+use Atk4\Ui\Exception\UnhandledCallbackExceptionError;
+use Atk4\Ui\Layout\Centered;
 use Atk4\Ui\Message;
 use Atk4\Ui\Text;
 
@@ -98,11 +102,15 @@ abstract class AtkWordpress implements IPlugin
         $this->getComponentController()->setup($this);
 
         // register ajax action for this plugin
-        add_action("wp_ajax_{$this->pluginName}", [$this, 'wpAjaxExecute']);
+        add_action("wp_ajax_{$this->pluginName}", function(...$args) {
+            $this->wpAjaxExecute();
+        });
 
         if ($this->getConfig('plugin/use_ajax_front', false)) {
             // enable Wp ajax front end action.
-            add_action("wp_ajax_nopriv_{$this->pluginName}", [$this, 'wpAjaxExecute']);
+            add_action("wp_ajax_nopriv_{$this->pluginName}", function(...$args) {
+                $this->wpAjaxExecute();
+            });
         }
     }
 
@@ -116,7 +124,7 @@ abstract class AtkWordpress implements IPlugin
             /** @var IMetaboxField $metaBox */
             $metaBox = $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
             $metaBox->setFieldInput($post->ID, $this->getComponentController());
-            $this->atkApp->execute();
+            $this->atkApp->run();
         } catch (\Throwable $e) {
             $this->caughtException($e);
         }
@@ -125,13 +133,13 @@ abstract class AtkWordpress implements IPlugin
     public function wpShortcodeExecute(array $shortcode, array $args)
     {
         $this->activatedComponent = $shortcode;
-        ++$this->componentCount;
+        $this->componentCount++;
 
         try {
             $view = new $this->activatedComponent['uses'](['args' => $args]);
             $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName . '-' . $this->componentCount);
 
-            return $this->atkApp->render(false);
+            return $this->atkApp->render($this->atkApp->isJsUrlRequest());
         } catch (\Throwable $e) {
             $this->caughtException($e);
         }
@@ -146,7 +154,7 @@ abstract class AtkWordpress implements IPlugin
         try {
             $view = new $this->activatedComponent['uses'](['configureMode' => $configureMode]);
             $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
-            $this->atkApp->execute();
+            $this->atkApp->run();
         } catch (\Throwable $e) {
             $this->caughtException($e);
         }
@@ -163,7 +171,7 @@ abstract class AtkWordpress implements IPlugin
         try {
             $view = new $this->activatedComponent['uses']();
             $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
-            $this->atkApp->execute();
+            $this->atkApp->run();
         } catch (\Throwable $e) {
             $this->caughtException($e);
         }
@@ -195,7 +203,7 @@ abstract class AtkWordpress implements IPlugin
         try {
             $view = new $this->activatedComponent['uses']();
             $this->atkApp->initWpLayout($view, $this->defaultLayout, $name);
-            $this->atkApp->execute($this->ajaxMode);
+            $this->atkApp->run();
         } catch (\Throwable $e) {
             $this->caughtException($e);
         }
@@ -227,7 +235,9 @@ abstract class AtkWordpress implements IPlugin
 
     private function initApp()
     {
-        $this->atkApp = new AtkWordpressApp($this);
+        $this->atkApp = new AtkWordpressApp([
+            'plugin' => $this,
+        ]);
     }
 
     public function getTemplateLocation(string $filename): array
@@ -242,7 +252,9 @@ abstract class AtkWordpress implements IPlugin
 
     public function newAtkAppView($template, $name): AtkWordpressView
     {
-        $app = new AtkWordpressApp($this);
+        $app = new AtkWordpressApp([
+            'plugin' => $this,
+        ]);
 
         $atkView = new AtkWordpressView();
 
@@ -254,7 +266,8 @@ abstract class AtkWordpress implements IPlugin
         return $this->atkApp->initWpLayout(new AtkWordpressView(), $template, $name);
     }
 
-    private function caughtException(\Throwable $e)
+    /*
+    public function caughtException(\Throwable $e)
     {
         $view = $this->newAtkAppView('layout.html', $this->pluginName);
 
@@ -286,6 +299,52 @@ abstract class AtkWordpress implements IPlugin
         }
 
         $this->atkApp->callExit();
+    }
+    */
+
+    /**
+     * Catch exception.
+     */
+    public function caughtException(\Throwable $exception): void
+    {
+        while ($exception instanceof UnhandledCallbackExceptionError) {
+            $exception = $exception->getPrevious();
+        }
+
+        $this->atkApp->catchRunawayCallbacks = false;
+
+        // just replace layout to avoid any extended App->_construct problems
+        // it will maintain everything as in the original app StickyGet, logger, Events
+        $this->atkApp->html = null;
+        $this->atkApp->initLayout([Centered::class]);
+
+        $this->atkApp->layout->template->dangerouslySetHtml('Content', $this->atkApp->renderExceptionHtml($exception));
+
+        // remove header
+        $this->atkApp->layout->template->tryDel('Header');
+
+        if (($this->atkApp->isJsUrlRequest() || strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest')
+            && !isset($_GET['__atk_tab'])) {
+
+            $privateMethod = new \ReflectionMethod(App::class, 'outputResponseJson');
+            $privateMethod->setAccessible(true);
+
+            $privateMethod->invoke($this->atkApp, [
+                'success' => false,
+                'message' => $this->atkApp->layout->getHtml(),
+            ]);
+        } else {
+            $this->atkApp->setResponseStatusCode(500);
+            $this->atkApp->run();
+        }
+
+        // Process is already in shutdown/stop
+        // no need of call exit function
+
+        $privateMethod = new \ReflectionMethod(App::class, 'callBeforeExit');
+        $privateMethod->setAccessible(true);
+
+        $privateMethod->invoke($this->atkApp);
     }
 
     public function getPluginBaseUrl(): string

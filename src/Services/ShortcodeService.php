@@ -36,6 +36,7 @@ class ShortcodeService extends AbstractService
         $this->shortcodes[$key] = $shortcode;
 
         add_shortcode($shortcode['name'], function ($args) use ($key, $shortcode) {
+
             $callable = \Closure::fromCallable([$this->getPlugin(), 'wpShortcodeExecute']);
 
             if (!$this->shortcodes[$key]['enqueued']) {

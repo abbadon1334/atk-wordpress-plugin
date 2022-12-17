@@ -77,7 +77,7 @@ class EnqueueService extends AbstractService
                 $this->buildPathAsset($js['src']),
                 $js['deps'] ?? [],
                 $js['version'] ?? false,
-                $js['footer'] ?? true
+                $js['footer'] ?? false
             );
         }
 
