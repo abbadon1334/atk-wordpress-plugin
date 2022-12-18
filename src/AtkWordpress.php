@@ -40,6 +40,9 @@ abstract class AtkWordpress implements IPlugin
 
     private array $template_paths = [];
 
+    /** @var ComponentController[] */
+    public array $controllers = [];
+
     public function __construct(string $plugin_name)
     {
         $this->setDbConnection();
@@ -122,10 +125,7 @@ abstract class AtkWordpress implements IPlugin
 
     public function getComponentController(): ComponentController
     {
-        /** @var ComponentController $ctrl */
-        $ctrl = $this->_getFromCollection(ComponentController::class, 'controllers');
-
-        return $ctrl;
+        return $this->controllers[ComponentController::class];
     }
 
     public function wpAjaxExecute(): void
