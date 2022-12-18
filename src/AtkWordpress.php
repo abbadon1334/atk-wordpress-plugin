@@ -13,11 +13,7 @@ use Atk4\Core\ConfigTrait;
 use Atk4\Core\Factory;
 use Atk4\Data\Persistence\Sql;
 use Atk4\Ui\App;
-use Atk4\Ui\Exception\LateOutputError;
 use Atk4\Ui\Exception\UnhandledCallbackExceptionError;
-use Atk4\Ui\Layout\Centered;
-use Atk4\Ui\Message;
-use Atk4\Ui\Text;
 
 abstract class AtkWordpress implements IPlugin
 {
@@ -26,30 +22,43 @@ abstract class AtkWordpress implements IPlugin
         readConfig as private loadConfigFromFolder;
     }
 
+    public string $defaultLayout = 'layout.html';
+
     private Sql    $dbConnection;
+
     private string $pluginName;
-    private array  $controllers = [];
+
     private ?array $activatedComponent = null;
+
     private int    $componentCount = 0;
 
     private string          $pluginBaseUrl;
-    private AtkWordpressApp $atkApp;
-    private string $pluginBasePath;
-    private string $pluginAtkTemplatePath;
-    private bool   $ajaxMode = false;
 
-    public string $defaultLayout = 'layout.html';
+    private AtkWordpressApp $atkApp;
+
+    private string          $pluginBasePath;
+
     private array $template_paths = [];
 
     public function __construct(string $plugin_name)
     {
         $this->setDbConnection();
         $this->_addIntoCollection(ModelController::class, Factory::factory([ModelController::class]), 'controllers');
-        $this->_addIntoCollection(ComponentController::class, Factory::factory([ComponentController::class]), 'controllers');
+        $this->_addIntoCollection(
+            ComponentController::class,
+            Factory::factory([ComponentController::class]),
+            'controllers'
+        );
         $this->pluginName = $plugin_name;
     }
 
-    public function loadConfigFromFolder($path, $type = 'php')
+    private function setDbConnection(): void
+    {
+        $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME;
+        $this->dbConnection = new SQL($dsn, DB_USER, DB_PASSWORD);
+    }
+
+    public function loadConfigFromFolder($path, string $type = 'php'): void
     {
         $this->readConfig(glob($path . '/*'), $type);
     }
@@ -62,26 +71,12 @@ abstract class AtkWordpress implements IPlugin
         return $ctrl;
     }
 
-    public function getComponentController(): ComponentController
-    {
-        /** @var ComponentController $ctrl */
-        $ctrl = $this->_getFromCollection(ComponentController::class, 'controllers');
-
-        return $ctrl;
-    }
-
-    private function setDbConnection(): void
-    {
-        $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME;
-        $this->dbConnection = new SQL($dsn, DB_USER, DB_PASSWORD);
-    }
-
     public function getDbConnection(): Sql
     {
         return $this->dbConnection;
     }
 
-    public function boot(string $filePath)
+    public function boot(string $filePath): void
     {
         $this->pluginBasePath = plugin_dir_path($filePath);
         $this->pluginBaseUrl = plugin_dir_url($filePath);
@@ -96,91 +91,45 @@ abstract class AtkWordpress implements IPlugin
         $this->init();
 
         // setup plugin activation / deactivation hook.
-        register_activation_hook($filePath, [$this, 'activatePlugin']);
-        register_deactivation_hook($filePath, [$this, 'deactivatePlugin']);
+        register_activation_hook($filePath, function (): void {
+            $this->activatePlugin();
+        });
+        register_deactivation_hook($filePath, function (): void {
+            $this->deactivatePlugin();
+        });
 
         $this->getComponentController()->setup($this);
 
         // register ajax action for this plugin
-        add_action("wp_ajax_{$this->pluginName}", function(...$args) {
+        add_action(sprintf('wp_ajax_%s', $this->pluginName), function (...$args): void {
             $this->wpAjaxExecute();
         });
 
         if ($this->getConfig('plugin/use_ajax_front', false)) {
             // enable Wp ajax front end action.
-            add_action("wp_ajax_nopriv_{$this->pluginName}", function(...$args) {
+            add_action(sprintf('wp_ajax_nopriv_%s', $this->pluginName), function (...$args): void {
                 $this->wpAjaxExecute();
             });
         }
     }
 
-    public function wpMetaBoxExecute(\WP_Post $post, array $param)
+    private function initApp(): void
     {
-        // set the view to output.
-        $this->activatedComponent = $this->getComponentController()->searchComponentByType('metabox', $param['id']);
-
-        try {
-            $view = new $this->activatedComponent['uses'](['args' => $param['args']]);
-            /** @var IMetaboxField $metaBox */
-            $metaBox = $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
-            $metaBox->setFieldInput($post->ID, $this->getComponentController());
-            $this->atkApp->run();
-        } catch (\Throwable $e) {
-            $this->caughtException($e);
-        }
+        $this->atkApp = new AtkWordpressApp([
+            'plugin' => $this,
+        ]);
     }
 
-    public function wpShortcodeExecute(array $shortcode, array $args)
+    public function getComponentController(): ComponentController
     {
-        $this->activatedComponent = $shortcode;
-        $this->componentCount++;
+        /** @var ComponentController $ctrl */
+        $ctrl = $this->_getFromCollection(ComponentController::class, 'controllers');
 
-        try {
-            $view = new $this->activatedComponent['uses'](['args' => $args]);
-            $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName . '-' . $this->componentCount);
-
-            return $this->atkApp->render($this->atkApp->isJsUrlRequest());
-        } catch (\Throwable $e) {
-            $this->caughtException($e);
-        }
+        return $ctrl;
     }
 
-    public function wpDashboardExecute($key, $dashboard, $configureMode = false)
+    public function wpAjaxExecute(): void
     {
-        $componentCtrl = $this->getComponentController();
-
-        $this->activatedComponent = $componentCtrl->searchComponentByType('dashboard', $dashboard['id']);
-
-        try {
-            $view = new $this->activatedComponent['uses'](['configureMode' => $configureMode]);
-            $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
-            $this->atkApp->run();
-        } catch (\Throwable $e) {
-            $this->caughtException($e);
-        }
-    }
-
-    public function wpPanelExecute()
-    {
-        global $hook_suffix;
-
-        $componentCtrl = $this->getComponentController();
-
-        $this->activatedComponent = $componentCtrl->searchComponentByType('panel', $hook_suffix, 'hook');
-
-        try {
-            $view = new $this->activatedComponent['uses']();
-            $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
-            $this->atkApp->run();
-        } catch (\Throwable $e) {
-            $this->caughtException($e);
-        }
-    }
-
-    public function wpAjaxExecute()
-    {
-        $this->ajaxMode = true;
-
         $componentCtrl = $this->getComponentController();
 
         if ($this->getConfig('plugin/use_nounce', false)) {
@@ -204,10 +153,143 @@ abstract class AtkWordpress implements IPlugin
             $view = new $this->activatedComponent['uses']();
             $this->atkApp->initWpLayout($view, $this->defaultLayout, $name);
             $this->atkApp->run();
-        } catch (\Throwable $e) {
-            $this->caughtException($e);
+        } catch (\Throwable $throwable) {
+            $this->caughtException($throwable);
         }
+
         $this->atkApp->callExit();
+    }
+
+    /**
+     * Catch exception.
+     */
+    public function caughtException(\Throwable $exception): void
+    {
+        while ($exception instanceof UnhandledCallbackExceptionError) {
+            $exception = $exception->getPrevious();
+        }
+
+        $this->initApp();
+        $this->init();
+
+        $this->atkApp->catchRunawayCallbacks = false;
+
+        // just replace layout to avoid any extended App->_construct problems
+        // it will maintain everything as in the original app StickyGet, logger, Events
+        $this->getAtkAppView($this->defaultLayout, $this->pluginName);
+
+        $this->atkApp->wpHtml->template->dangerouslySetHtml('Content', $this->atkApp->renderExceptionHtml($exception));
+
+        // remove header
+        $this->atkApp->wpHtml->template->tryDel('Header');
+
+        if (($this->atkApp->isJsUrlRequest() || strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest')
+            && !isset($_GET['__atk_tab'])) {
+            $privateMethod = new \ReflectionMethod(App::class, 'outputResponseJson');
+            $privateMethod->setAccessible(true);
+
+            $privateMethod->invoke($this->atkApp, [
+                'success' => false,
+                'message' => $this->atkApp->wpHtml->getHtml(),
+            ]);
+        } else {
+            $this->atkApp->setResponseStatusCode(500);
+            $this->atkApp->run();
+        }
+
+        // Process is already in shutdown/stop
+        // no need of call exit function
+
+        $privateMethod = new \ReflectionMethod(App::class, 'callBeforeExit');
+        $privateMethod->setAccessible(true);
+
+        $privateMethod->invoke($this->atkApp);
+    }
+
+    public function getAtkAppView($template, $name): AtkWordpressView
+    {
+        return $this->atkApp->initWpLayout(new AtkWordpressView(), $template, $name);
+    }
+
+    public function wpMetaBoxExecute(\WP_Post $post, array $param): void
+    {
+        // set the view to output.
+        $this->activatedComponent = $this->getComponentController()->searchComponentByType('metabox', $param['id']);
+
+        try {
+            $view = new $this->activatedComponent['uses'](['args' => $param['args']]);
+            /** @var IMetaboxField $metaBox */
+            $metaBox = $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
+            $metaBox->setFieldInput($post->ID, $this->getComponentController());
+            $this->atkApp->run();
+        } catch (\Throwable $throwable) {
+            $this->caughtException($throwable);
+        }
+    }
+
+    public function wpShortcodeExecute(array $shortcode, array $args)
+    {
+        $this->activatedComponent = $shortcode;
+        ++$this->componentCount;
+
+        try {
+            $view = new $this->activatedComponent['uses'](['args' => $args]);
+            $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName . '-' . $this->componentCount);
+
+            return $this->atkApp->render($this->atkApp->isJsUrlRequest());
+        } catch (\Throwable $throwable) {
+            $this->caughtException($throwable);
+        }
+    }
+
+    public function wpPageExecute(array $page, array $args)
+    {
+        $this->activatedComponent = $page;
+
+        try {
+            $view = new $this->activatedComponent['uses'](['args' => $args]);
+            $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
+
+            ob_start();
+
+            $this->atkApp->run();
+
+            return ob_get_clean();
+        } catch (\Throwable $throwable) {
+            $this->caughtException($throwable);
+        }
+    }
+
+    public function wpDashboardExecute($key, $dashboard, $configureMode = false): void
+    {
+        $componentCtrl = $this->getComponentController();
+
+        $this->activatedComponent = $componentCtrl->searchComponentByType('dashboard', $dashboard['id']);
+
+        try {
+            $view = new $this->activatedComponent['uses'](['configureMode' => $configureMode]);
+            $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
+            $this->atkApp->run();
+        } catch (\Throwable $throwable) {
+            $this->caughtException($throwable);
+        }
+    }
+
+    public function wpPanelExecute(): void
+    {
+        global $hook_suffix;
+
+        $componentCtrl = $this->getComponentController();
+
+        $this->activatedComponent = $componentCtrl->searchComponentByType('panel', $hook_suffix, 'hook');
+
+        try {
+            $view = new $this->activatedComponent['uses']();
+            $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
+            $this->atkApp->run();
+        } catch (\Throwable $throwable) {
+            $this->caughtException($throwable);
+        }
     }
 
     public function getPluginName(): string
@@ -229,15 +311,7 @@ abstract class AtkWordpress implements IPlugin
     {
         return $key
             ? ($this->activatedComponent[$key] ?? null)
-            : $this->activatedComponent
-        ;
-    }
-
-    private function initApp()
-    {
-        $this->atkApp = new AtkWordpressApp([
-            'plugin' => $this,
-        ]);
+            : $this->activatedComponent;
     }
 
     public function getTemplateLocation(string $filename): array
@@ -248,22 +322,6 @@ abstract class AtkWordpress implements IPlugin
         }
 
         return $paths;
-    }
-
-    public function newAtkAppView($template, $name): AtkWordpressView
-    {
-        $app = new AtkWordpressApp([
-            'plugin' => $this,
-        ]);
-
-        $atkView = new AtkWordpressView();
-
-        return $app->initWpLayout($atkView, $template, $name);
-    }
-
-    public function getAtkAppView($template, $name): AtkWordpressView
-    {
-        return $this->atkApp->initWpLayout(new AtkWordpressView(), $template, $name);
     }
 
     /*
@@ -302,49 +360,15 @@ abstract class AtkWordpress implements IPlugin
     }
     */
 
-    /**
-     * Catch exception.
-     */
-    public function caughtException(\Throwable $exception): void
+    public function newAtkAppView($template, $name): AtkWordpressView
     {
-        while ($exception instanceof UnhandledCallbackExceptionError) {
-            $exception = $exception->getPrevious();
-        }
+        $app = new AtkWordpressApp([
+            'plugin' => $this,
+        ]);
 
-        $this->atkApp->catchRunawayCallbacks = false;
+        $atkView = new AtkWordpressView();
 
-        // just replace layout to avoid any extended App->_construct problems
-        // it will maintain everything as in the original app StickyGet, logger, Events
-        $this->atkApp->html = null;
-        $this->atkApp->initLayout([Centered::class]);
-
-        $this->atkApp->layout->template->dangerouslySetHtml('Content', $this->atkApp->renderExceptionHtml($exception));
-
-        // remove header
-        $this->atkApp->layout->template->tryDel('Header');
-
-        if (($this->atkApp->isJsUrlRequest() || strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest')
-            && !isset($_GET['__atk_tab'])) {
-
-            $privateMethod = new \ReflectionMethod(App::class, 'outputResponseJson');
-            $privateMethod->setAccessible(true);
-
-            $privateMethod->invoke($this->atkApp, [
-                'success' => false,
-                'message' => $this->atkApp->layout->getHtml(),
-            ]);
-        } else {
-            $this->atkApp->setResponseStatusCode(500);
-            $this->atkApp->run();
-        }
-
-        // Process is already in shutdown/stop
-        // no need of call exit function
-
-        $privateMethod = new \ReflectionMethod(App::class, 'callBeforeExit');
-        $privateMethod->setAccessible(true);
-
-        $privateMethod->invoke($this->atkApp);
+        return $app->initWpLayout($atkView, $template, $name);
     }
 
     public function getPluginBaseUrl(): string

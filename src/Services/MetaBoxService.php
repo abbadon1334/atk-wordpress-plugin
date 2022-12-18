@@ -12,12 +12,12 @@ class MetaBoxService extends AbstractService
     {
         $this->setupMetaboxes();
 
-        add_action('admin_init', function () {
+        add_action('admin_init', function (): void {
             $this->getComponentController()->registerComponents('metabox', $this->metaboxes);
         });
     }
 
-    private function setupMetaboxes()
+    private function setupMetaboxes(): void
     {
         $metaboxes = $this->getPlugin()->getConfig('metabox', []);
 
@@ -29,15 +29,15 @@ class MetaBoxService extends AbstractService
         }
     }
 
-    private function registerMetabox(string $key, mixed $metabox)
+    private function registerMetabox(string $key, mixed $metabox): void
     {
         $this->metaboxes[$key] = $metabox;
 
-        add_action('add_meta_boxes', function () use ($key, $metabox) {
+        add_action('add_meta_boxes', function () use ($key, $metabox): void {
             add_meta_box(
                 $key,
                 $metabox['title'],
-                \Closure::fromCallable([$this->getPlugin(), 'wpMetaboxExecute']),
+                \Closure::fromCallable(fn (\WP_Post $post, array $param) => $this->getPlugin()->wpMetaBoxExecute($post, $param)),
                 $metabox['screen'] ?? null,
                 $metabox['context'] ?? 'advanced',
                 $metabox['priority'] ?? 'default',
@@ -45,15 +45,15 @@ class MetaBoxService extends AbstractService
             );
         });
         // Add save post action
-        add_action('save_post_' . $metabox['type'], \Closure::fromCallable([$this, 'savePostType']), 10, 3);
+        add_action('save_post_' . $metabox['type'], \Closure::fromCallable(fn ($postId, \WP_Post $post, $isUpdating) => $this->savePostType($postId, $post, $isUpdating)), 10, 3);
     }
 
-    public function savePostType($postId, \WP_Post $post, $isUpdating)
+    public function savePostType($postId, \WP_Post $post, $isUpdating): void
     {
         // Add new post will trigger the save post hook and isUpdating will be false
         // We do want to catch this for saving our meta field.
         if ($isUpdating) {
-            foreach ($this->metaboxes as $key => $metaBox) {
+            foreach ($this->metaboxes as $metaBox) {
                 $box = new $metaBox['uses']();
                 $box->savePost($postId, $this->getPlugin());
             }

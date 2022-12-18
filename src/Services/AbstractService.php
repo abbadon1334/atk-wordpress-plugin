@@ -17,16 +17,16 @@ abstract class AbstractService implements IService
     use NameTrait;
     use TrackableTrait;
 
+    public function getPlugin(): AtkWordpress
+    {
+        return $this->getComponentController()->getPlugin();
+    }
+
     public function getComponentController(): ComponentController
     {
         /** @var ComponentController $cc */
         $cc = $this->getOwner();
 
         return $cc;
-    }
-
-    public function getPlugin(): AtkWordpress
-    {
-        return $this->getComponentController()->getPlugin();
     }
 }

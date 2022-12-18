@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Atk4\AtkWordpress\Models;
+namespace Atk4\AtkWordpress\Models\Internal;
 
 use Atk4\AtkWordpress\Helpers\WP;
 use Atk4\Data\Model;
 
-class WpModel extends Model
+abstract class WpModel extends Model
 {
     public string $wp_table;
-
-    protected $_defaultSeedJoin = [WpModelJoin::class];
 
     /**
      * Return internal declaration of SQL Schema.

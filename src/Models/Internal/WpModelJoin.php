@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Atk4\AtkWordpress\Models;
+namespace Atk4\AtkWordpress\Models\Internal;
 
-use Atk4\AtkWordpress\Helpers\WP;
 use Atk4\Data\Model;
 use Atk4\Data\Persistence\Sql\Join;
 
 class WpModelJoin extends Join
 {
-    public $foreignTableIdField = 'id';
-    public $foreignTableIdFieldType = 'integer';
+    /** @var Model|\Closure|null */
+    public $foreignModel;
 
     protected function createFakeForeignModel(): Model
     {
-        $fakeModel = new Model($this->getOwner()->getPersistence(), [
-            'table' => $this->foreignTable,
-            'idField' => $this->foreignTableIdField,
-        ]);
+        if ($this->foreignModel instanceof \Closure) {
+            $this->foreignModel = ($this->foreignModel)($this->getOwner()->getPersistence());
+        }
+
+        $fakeModel = $this->foreignModel;
 
         foreach ($this->getOwner()->getFields() as $ownerField) {
             if ($ownerField->hasJoin() && $ownerField->getJoin()->shortName === $this->shortName) {
@@ -29,9 +29,6 @@ class WpModelJoin extends Join
                     ]);
                 }
             }
-        }
-        if ($fakeModel->idField !== $this->foreignField && $this->foreignField !== null) {
-            $fakeModel->addField($this->foreignField, ['type' => $this->foreignTableIdFieldType]);
         }
 
         return $fakeModel;

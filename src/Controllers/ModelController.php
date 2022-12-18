@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Atk4\AtkWordpress\Controllers;
 
-use Atk4\AtkWordpress\Data\WpModel;
+use Atk4\AtkWordpress\Models\Internal\WpModel;
 use Atk4\AtkWordpress\Helpers\WP;
 
 class ModelController extends AbstractController
@@ -30,7 +30,7 @@ class ModelController extends AbstractController
     {
         $key = $override_key ?? get_class($model);
 
-        if (!in_array($key, array_keys($this->models), true)) {
+        if (!array_key_exists($key, $this->models)) {
             $this->models[$key] = $model;
         }
 

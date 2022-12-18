@@ -13,7 +13,7 @@ class PanelService extends AbstractService
         $this->setupPanels();
 
         // register panel components with ctrl ounce fully loaded and with hook setting in place.
-        add_action('admin_init', function () {
+        add_action('admin_init', function (): void {
             $this->getComponentController()->registerComponents('panel', $this->panels);
         });
     }
@@ -28,7 +28,7 @@ class PanelService extends AbstractService
             $this->panels[$key] = $panel;
         }
 
-        add_action('admin_menu', function () use ($panels) {
+        add_action('admin_menu', function () use ($panels): void {
             foreach ($panels as $key => $panel) {
                 $type = $panel['type'] ?? '';
                 $parent = $panel['parent'] ?? '';
@@ -48,9 +48,25 @@ class PanelService extends AbstractService
         });
     }
 
-    private function registerPanel(string $key, $parent, $panels)
+    private function registerWpSubPanel(int $key, $panel): void
     {
-        $executor = \Closure::fromCallable([$this->getPlugin(), 'wpPanelExecute']);
+        $executor = \Closure::fromCallable(fn () => $this->getPlugin()->wpPanelExecute());
+
+        $hook = add_submenu_page(
+            $panel['parent'],
+            $panel['page'],
+            $panel['menu'],
+            $panel['capabilities'],
+            $panel['slug'],
+            $executor
+        );
+
+        $this->panels[$key]['hook'] = $hook;
+    }
+
+    private function registerPanel(string $key, $parent, $panels): void
+    {
+        $executor = \Closure::fromCallable(fn () => $this->getPlugin()->wpPanelExecute());
 
         $hook = add_menu_page(
             $parent['page'],
@@ -83,21 +99,5 @@ class PanelService extends AbstractService
 
             $this->panels[$sub_key]['hook'] = $hook;
         }
-    }
-
-    private function registerWpSubPanel(int $key, $panel)
-    {
-        $executor = \Closure::fromCallable([$this->getPlugin(), 'wpPanelExecute']);
-
-        $hook = add_submenu_page(
-            $panel['parent'],
-            $panel['page'],
-            $panel['menu'],
-            $panel['capabilities'],
-            $panel['slug'],
-            $executor
-        );
-
-        $this->panels[$key]['hook'] = $hook;
     }
 }

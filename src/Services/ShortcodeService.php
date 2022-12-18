@@ -13,12 +13,12 @@ class ShortcodeService extends AbstractService
         $this->setup();
 
         // register shortcode component for front and ajax action.
-        add_action('wp_loaded', function () {
+        add_action('wp_loaded', function (): void {
             $this->getComponentController()->registerComponents('shortcode', $this->shortcodes);
         });
     }
 
-    private function setup()
+    private function setup(): void
     {
         $shortcodes = $this->getPlugin()->getConfig('shortcode', []);
 
@@ -31,13 +31,12 @@ class ShortcodeService extends AbstractService
         }
     }
 
-    private function registerShortcode(string $key, array $shortcode)
+    private function registerShortcode(string $key, array $shortcode): void
     {
         $this->shortcodes[$key] = $shortcode;
 
         add_shortcode($shortcode['name'], function ($args) use ($key, $shortcode) {
-
-            $callable = \Closure::fromCallable([$this->getPlugin(), 'wpShortcodeExecute']);
+            $callable = \Closure::fromCallable(fn (array $shortcode, array $args) => $this->getPlugin()->wpShortcodeExecute($shortcode, $args));
 
             if (!$this->shortcodes[$key]['enqueued']) {
                 $enqueue = $this->getPlugin()->getComponentController()->getEnqueueService();

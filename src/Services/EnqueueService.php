@@ -11,10 +11,10 @@ class EnqueueService extends AbstractService
     public function register(): void
     {
         add_action('admin_enqueue_scripts', fn ($hook) => $this->enqueueAdminFiles($hook));
-        add_action('wp_enqueue_scripts', fn ($hook) => $this->enqueueFrontFiles($hook));
+        add_action('wp_enqueue_scripts', fn ($hook) => $this->enqueueFrontFiles());
     }
 
-    private function enqueueAdminFiles(string $hook)
+    private function enqueueAdminFiles(string $hook): void
     {
         if (!WP::isAdmin()) {
             return;
@@ -66,7 +66,7 @@ class EnqueueService extends AbstractService
         $this->enqueueFiles($jsFiles, $cssFiles);
     }
 
-    public function registerAtkAssets()
+    public function registerAtkAssets(): void
     {
         $atk_js = $this->getPlugin()->getConfig('enqueue/atk/js', []);
 
@@ -95,11 +95,6 @@ class EnqueueService extends AbstractService
         }
     }
 
-    private function getPluginBaseUrl(): string
-    {
-        return $this->getPlugin()->getPluginBaseUrl();
-    }
-
     private function buildPathAsset(string $relative_path = null)
     {
         if (empty($relative_path)) {
@@ -109,7 +104,7 @@ class EnqueueService extends AbstractService
         return $this->getPlugin()->getPluginBaseUrl() . $relative_path;
     }
 
-    private function enqueueFiles(array $js_files, array $css_files)
+    private function enqueueFiles(array $js_files, array $css_files): void
     {
         foreach ($js_files as $name => $js) {
             $js['name'] = $name;
@@ -134,14 +129,13 @@ class EnqueueService extends AbstractService
         }
     }
 
-    private function enqueueFrontFiles(string $hook = null)
+    private function enqueueFrontFiles(): void
     {
         if (WP::isAdmin()) {
             return;
         }
 
         $this->registerAtkAssets();
-
         // Load our register atk js and css.
         foreach ($this->getPlugin()->getConfig('enqueue/atk/js') as $key => $url) {
             wp_enqueue_script($key);
@@ -157,7 +151,7 @@ class EnqueueService extends AbstractService
         );
     }
 
-    public function enqueueShortcodeFiles(array $shortcode)
+    public function enqueueShortcodeFiles(array $shortcode): void
     {
         $use_atk = $shortcode['atk'] ?? false;
 

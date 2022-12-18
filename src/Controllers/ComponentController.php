@@ -9,10 +9,10 @@ use Atk4\AtkWordpress\Interfaces\IService;
 use Atk4\AtkWordpress\Services\DashboardService;
 use Atk4\AtkWordpress\Services\EnqueueService;
 use Atk4\AtkWordpress\Services\MetaBoxService;
+use Atk4\AtkWordpress\Services\PageService;
 use Atk4\AtkWordpress\Services\PanelService;
 use Atk4\AtkWordpress\Services\ShortcodeService;
 use Atk4\AtkWordpress\Services\WidgetService;
-use Atk4\Core\Exception;
 
 class ComponentController extends AbstractController
 {
@@ -21,7 +21,7 @@ class ComponentController extends AbstractController
     /** @var IService[] */
     protected array $services = [];
 
-    public function setup(AtkWordpress $param)
+    public function setup(AtkWordpress $param): void
     {
         $this->addServiceType('enqueue', EnqueueService::class);
         $this->addServiceType('panel', PanelService::class);
@@ -29,22 +29,15 @@ class ComponentController extends AbstractController
         $this->addServiceType('dashboard', DashboardService::class);
         $this->addServiceType('widget', WidgetService::class);
         $this->addServiceType('shortcode', ShortcodeService::class);
+        $this->addServiceType('page', PageService::class);
     }
 
-    private function addServiceType(string $type, string $service_fqcn)
+    private function addServiceType(string $type, string $service_fqcn): void
     {
         /** @var IService $service */
         $service = new $service_fqcn();
         $this->_addIntoCollection($type, $service, 'services');
         $service->register();
-    }
-
-    public function getServiceByType(string $type): IService
-    {
-        /** @var IService $service */
-        $service = $this->_getFromCollection($type, 'services');
-
-        return $service;
     }
 
     public function getEnqueueService(): EnqueueService
@@ -55,12 +48,12 @@ class ComponentController extends AbstractController
         return $enqueue;
     }
 
-    public function getMetaboxService(): MetaBoxService
+    public function getServiceByType(string $type): IService
     {
-        /** @var MetaBoxService $metabox */
-        $metabox = $this->getServiceByType('metabox');
+        /** @var IService $service */
+        $service = $this->_getFromCollection($type, 'services');
 
-        return $metabox;
+        return $service;
     }
 
     public function registerComponents($type, array $components): void
@@ -72,7 +65,7 @@ class ComponentController extends AbstractController
     {
         $componentsType = $this->getComponentsByType($type);
 
-        if (empty($componentsType)) {
+        if ($componentsType === []) {
             // TODO throw exception?
         }
 
@@ -127,6 +120,14 @@ class ComponentController extends AbstractController
     public function getPostMetaData(int $postID, string $postKey, bool $single = true)
     {
         return $this->getMetaboxService()->getPostMetaData($postID, $postKey, $single);
+    }
+
+    public function getMetaboxService(): MetaBoxService
+    {
+        /** @var MetaBoxService $metabox */
+        $metabox = $this->getServiceByType('metabox');
+
+        return $metabox;
     }
 
     /**

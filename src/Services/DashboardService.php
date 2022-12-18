@@ -12,12 +12,12 @@ class DashboardService extends AbstractService
     {
         $this->setupWidgets();
 
-        add_action('admin_init', function () {
+        add_action('admin_init', function (): void {
             $this->getComponentController()->registerComponents('dashboard', $this->widgets);
         });
     }
 
-    private function setupWidgets()
+    private function setupWidgets(): void
     {
         $widgets = $this->getPlugin()->getConfig('dashboard', []);
 
@@ -28,16 +28,16 @@ class DashboardService extends AbstractService
         }
     }
 
-    private function registerWidget($key, $widget)
+    private function registerWidget($key, $widget): void
     {
         $this->widgets[$key] = $widget;
 
-        add_action('wp_dashboard_setup', function () use ($key, $widget) {
-            $callable = \Closure::fromCallable([$this->getPlugin(), 'wpDashboardExecute']);
+        add_action('wp_dashboard_setup', function () use ($key, $widget): void {
+            $callable = \Closure::fromCallable(fn ($key, $dashboard, $configureMode = false) => $this->getPlugin()->wpDashboardExecute($key, $dashboard, $configureMode));
 
             $configureCallback = null;
             if ($widget['configureMode']) {
-                $configureCallback = function () use ($key, $widget, $callable) {
+                $configureCallback = static function () use ($key, $widget, $callable): void {
                     call_user_func_array($callable, [$key, $widget, true]);
                 };
             }

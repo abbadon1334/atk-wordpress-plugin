@@ -8,8 +8,6 @@ use Atk4\AtkWordpress\Components\WidgetComponent;
 
 class WidgetService extends AbstractService
 {
-    private array $widgets = [];
-
     public function register(): void
     {
         $widgets = $this->getPlugin()->getConfig('widget', []);
@@ -21,11 +19,9 @@ class WidgetService extends AbstractService
         }
     }
 
-    public function registerWidget($id, $widget)
+    public function registerWidget($id, $widget): void
     {
-        $this->widgets[$id] = $widget;
-
-        add_action('widgets_init', function () use ($id, $widget) {
+        add_action('widgets_init', function () use ($id, $widget): void {
             global $wp_widget_factory;
 
             /** @var WidgetComponent $widget */

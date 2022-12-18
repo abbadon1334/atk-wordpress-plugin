@@ -35,28 +35,32 @@ abstract class Metabox extends AbstractComponent implements IMetaboxField
 
         $this->fieldCtrl = $fieldCtrl;
 
-        if (!$this->fieldCtrl) {
+        if (!$this->fieldCtrl instanceof \Atk4\AtkWordpress\Interfaces\IMetaField) {
             $this->fieldCtrl = new MetaFieldController();
         }
 
         $this->onInitMetaBoxFields($this->fieldCtrl);
     }
 
-    public function setFieldInput($postId, ComponentController $compCtrl)
+    public function setFieldInput($postId, ComponentController $compCtrl): void
     {
-        if ($this->fieldCtrl) {
-            foreach ($this->fieldCtrl->getFields() as $key => $field) {
+        if ($this->fieldCtrl !== null) {
+            foreach ($this->fieldCtrl->getFields() as $field) {
                 $field->set($compCtrl->getPostMetaData($postId, $field->short_name, true));
             }
         }
     }
 
-    public function savePost(int $postId, ComponentController $compCtrl)
+    public function savePost(int $postId, ComponentController $compCtrl): void
     {
-        if ($this->fieldCtrl) {
+        if ($this->fieldCtrl !== null) {
             foreach ($this->fieldCtrl->getFields() as $key => $field) {
                 if (isset($_POST) && array_key_exists($field->short_name, $_POST)) {
-                    $compCtrl->savePostMetaData($postId, $field->short_name, $this->onUpdateMetaFieldRawData($key, $_POST[$field->short_name]));
+                    $compCtrl->savePostMetaData(
+                        $postId,
+                        $field->short_name,
+                        $this->onUpdateMetaFieldRawData($key, $_POST[$field->short_name])
+                    );
                 }
             }
         }
