@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Atk4\AtkWordpress\Controllers;
 
-use Atk4\AtkWordpress\Models\Internal\WpModel;
 use Atk4\AtkWordpress\Helpers\WP;
+use Atk4\AtkWordpress\Models\Internal\WpModel;
 
 class ModelController extends AbstractController
 {

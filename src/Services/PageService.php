@@ -63,6 +63,10 @@ class PageService extends AbstractService
                 return $template;
             }
 
+            if ($meta['_wp_page_template'][0] === 'default') {
+                return $template;
+            }
+
             return empty($page['file'])
                 ? $this->getPlugin()->getPluginBasePath() . '/vendor/abbadon1334/atk-wordpress-plugin/resources/wordpress-template.php'
                 : $template;
