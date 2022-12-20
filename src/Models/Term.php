@@ -21,6 +21,7 @@ class Term extends WpModel
 
         $taxonomy = $this->hasOne('term_taxonomy', [
             'model' => [TermTaxonomy::class],
+            'ourField' => 'term_id',
             'theirField' => 'term_id',
         ]);
 
