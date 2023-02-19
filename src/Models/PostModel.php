@@ -35,28 +35,4 @@ class PostModel extends Internal\WpModel
         $this->addField('post_type', ['system' => true]);
         $this->addCondition('post_type', $this->post_type);
     }
-
-    public function joinPostMetaValue(string $meta_key, string $fieldName, $fieldDefaults = []): WpModelJoin
-    {
-        $alias = 'md_' . $meta_key;
-
-        /** @var WpModelJoin $join */
-        $join = $this->join($alias, [
-            'foreignTable' => WP::getDbPrefix() . 'postmeta',
-            'on' => $this->expr(WP::getDbPrefix() . 'posts.ID = ' . $alias . '.post_id AND ' . $alias . '.meta_key = "' . $meta_key . '"'),
-            'foreignModel' => function () use ($meta_key): \Atk4\AtkWordpress\Models\Internal\WpModelPostMeta {
-                $postmeta = new WpModelPostMeta($this->getPersistence());
-                $postmeta->addCondition('meta_key', $meta_key);
-
-                return $postmeta;
-            },
-            'foreignAlias' => $alias,
-            'masterField' => 'ID',
-            'foreignField' => 'post_id',
-        ]);
-
-        $join->addField($fieldName, array_merge(['actual' => 'meta_value'], $fieldDefaults));
-
-        return $join;
-    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Atk4\AtkWordpress;
 
+use Atk4\AtkWordpress\Components\Metabox;
 use Atk4\AtkWordpress\Controllers\ComponentController;
 use Atk4\AtkWordpress\Controllers\ModelController;
 use Atk4\AtkWordpress\Interfaces\IMetaboxField;
@@ -91,7 +92,6 @@ abstract class AtkWordpress implements IPlugin
         }
 
         $this->initApp();
-        $this->init();
 
         // setup plugin activation / deactivation hook.
         register_activation_hook($filePath, function (): void {
@@ -121,6 +121,7 @@ abstract class AtkWordpress implements IPlugin
         $this->atkApp = new AtkWordpressApp([
             'plugin' => $this,
         ]);
+        $this->atkApp->invokeInit();
     }
 
     public function getComponentController(): ComponentController
@@ -170,7 +171,6 @@ abstract class AtkWordpress implements IPlugin
         }
 
         $this->initApp();
-        $this->init();
 
         $this->atkApp->catchRunawayCallbacks = false;
 
@@ -218,7 +218,7 @@ abstract class AtkWordpress implements IPlugin
 
         try {
             $view = new $this->activatedComponent['uses'](['args' => $param['args']]);
-            /** @var IMetaboxField $metaBox */
+            /** @var Metabox $metaBox */
             $metaBox = $this->atkApp->initWpLayout($view, $this->defaultLayout, $this->pluginName);
             $metaBox->setFieldInput($post->ID, $this->getComponentController());
             $this->atkApp->run();

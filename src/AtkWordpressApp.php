@@ -224,4 +224,9 @@ class AtkWordpressApp extends App
 
         throw new Exception('no template found');
     }
+
+    public function addStyle($style): void
+    {
+        $this->wpHtml->template->dangerouslyAppendHtml('Head', $this->getTag('style', [], $style));
+    }
 }

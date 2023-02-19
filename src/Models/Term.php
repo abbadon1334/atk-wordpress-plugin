@@ -12,6 +12,8 @@ class Term extends WpModel
 
     public $idField = 'term_id';
 
+    public ?string $titleField = 'name';
+
     protected function init(): void
     {
         parent::init();
@@ -21,15 +23,22 @@ class Term extends WpModel
 
         $taxonomy = $this->hasOne('term_taxonomy', [
             'model' => [TermTaxonomy::class],
-            'ourField' => 'term_id',
             'theirField' => 'term_id',
+            'ourField' => 'term_id',
         ]);
 
         $taxonomy->addField('taxonomy');
+        $taxonomy->addField('parent');
 
         $this->hasMany('relationships', [
             'model' => [TermRelationship::class],
             'theirField' => 'term_taxonomy_id',
+            'ourField' => 'term_id',
+        ]);
+
+        $this->hasMany('sub_terms', [
+            'model' => [self::class],
+            'theirField' => 'parent',
             'ourField' => 'term_id',
         ]);
     }

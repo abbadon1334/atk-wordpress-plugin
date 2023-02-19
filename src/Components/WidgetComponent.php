@@ -64,8 +64,9 @@ abstract class WidgetComponent extends \WP_Widget implements IWidget
      * passing a fully working atk view that will be echo when return by onWidget.
      *
      * @param array $args
+     * @param array $instance
      */
-    public function widget($args, array $instance): void
+    public function widget($args, $instance): void
     {
         echo $args['before_widget'];
 
@@ -92,12 +93,13 @@ abstract class WidgetComponent extends \WP_Widget implements IWidget
      * passing a fully working atk view that will be echo when return by onForm.
      * Use the $view pass to onForm for adding your input field.
      *
-     * @return string|void
+     * @param array $instance
      */
-    public function form(array $instance): void
+    public function form($instance): void
     {
         $view = $this->onForm($this->plugin->newAtkAppView('widget.html', $this->widgetConfig['id']), $instance);
-        $view->getApp()->execute();
+
+        $view->getApp()->run();
     }
 
     /**
@@ -106,8 +108,13 @@ abstract class WidgetComponent extends \WP_Widget implements IWidget
      * The \Wp_Widget::update() method.
      * If child class implement WidgetInterface, this method will call the onUpdate method
      * Use the onUpdate to sanitize field entry value prior to save them to db.
+     *
+     * @param array $new_instance
+     * @param array $old_instance
+     *
+     * @return array
      */
-    public function update(array $new_instance, array $old_instance): array
+    public function update($new_instance, $old_instance): array
     {
         return $this->onUpdate($new_instance, $old_instance);
     }

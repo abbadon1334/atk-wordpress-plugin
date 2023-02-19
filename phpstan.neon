@@ -1,0 +1,32 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 1
+    paths:
+        - src
+    excludePaths:
+      - resources/
+      - vendor/
+
+    bootstrapFiles:
+      - vendor/autoload.php
+
+    treatPhpDocTypesAsCertain: false
+
+    checkAlwaysTrueCheckTypeFunctionCall: true
+    checkAlwaysTrueInstanceof: true
+    checkAlwaysTrueStrictComparison: true
+    checkExplicitMixedMissingReturn: true
+    checkFunctionNameCase: true
+
+    reportMaybesInMethodSignatures: true
+    reportStaticMethodSignatures: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    checkMissingIterableValueType: false
+
+    ignoreErrors:
+      - '~^Constant DB_HOST not found.$~'
+      - '~^Constant DB_NAME not found.$~'
+      - '~^Constant DB_PASSWORD not found.$~'
+      - '~^Constant DB_USER not found.$~'

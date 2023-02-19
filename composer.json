@@ -1,10 +1,14 @@
 {
     "name": "abbadon1334/atk-wordpress-plugin",
     "description": "Use ATK in Wordpress framework",
-    "minimum-stability": "dev",
     "license": "MIT",
     "type": "library",
     "authors": [
+        {
+            "name": "Alain Belair",
+            "email": "belair.alain@gmail.com",
+            "homepage": "https://github.com/ibelar"
+        },
         {
             "name": "Francesco Danti",
             "email": "fdanti@gmail.com"
@@ -14,17 +18,29 @@
         "atk4/ui": "^4.0"
     },
     "require-dev": {
-        "phpstan/phpstan": "^1.9.2",
+        "ergebnis/composer-normalize": "^2.13",
         "friendsofphp/php-cs-fixer": "^v3.13.0",
-        "rector/rector": "^0.15.1"
+        "phpstan/phpstan": "^1.9.2",
+        "rector/rector": "^0.15.1",
+        "szepeviktor/phpstan-wordpress": "dev-master"
     },
-    "scripts" : {
-        "fix": "php-cs-fixer fix",
-        "stan": "phpstan analyse"
-    },
+    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "Atk4\\AtkWordpress\\": "src/"
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "ergebnis/composer-normalize": true,
+            "phpstan/extension-installer": true
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "fix": "php-cs-fixer fix",
+        "rector": "vendor/bin/rector process --clear-cache",
+        "rectordry": "vendor/bin/rector process --dry-run --clear-cache",
+        "stan": "phpstan analyse"
     }
 }

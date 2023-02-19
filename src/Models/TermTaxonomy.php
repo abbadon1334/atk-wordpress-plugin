@@ -16,7 +16,18 @@ class TermTaxonomy extends WpModel
     {
         parent::init();
 
-        $this->addField('term_id', ['system' => true]);
         $this->addField('taxonomy', ['system' => true]);
+
+        $this->hasOne('term_id', [
+            'model' => [Term::class],
+            'theirField' => 'term_id',
+            'system' => true,
+        ]);
+
+        $this->hasOne('parent', [
+            'model' => [Term::class],
+            'theirField' => 'term_id',
+            'system' => true,
+        ]);
     }
 }
