@@ -39,7 +39,7 @@ abstract class WpModel extends Model
 
     public function joinPostMetaValue(string $meta_key, string $fieldName, $fieldDefaults = []): WpModelJoin
     {
-        /** @var Sql $this */
+        /** @var Sql $persistence */
         $persistence = $this->getPersistence();
 
         $alias = 'md_' . $meta_key;
