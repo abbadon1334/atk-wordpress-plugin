@@ -22,6 +22,5 @@ return static function (RectorConfig $rectorConfig): void {
         SetList::PHP_74,
         SetList::CODING_STYLE,
         SetList::EARLY_RETURN,
-        SetList::TYPE_DECLARATION,
     ]);
 };
