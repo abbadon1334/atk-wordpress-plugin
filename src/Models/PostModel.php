@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Atk4\AtkWordpress\Models;
 
-use Atk4\AtkWordpress\Helpers\WP;
 use Atk4\AtkWordpress\Models\Internal\WpModelJoin;
-use Atk4\AtkWordpress\Models\Internal\WpModelPostMeta;
 use Atk4\Data\Persistence;
 
 class PostModel extends Internal\WpModel

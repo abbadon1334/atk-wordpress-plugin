@@ -13,7 +13,7 @@ class MetaFieldController implements \Atk4\AtkWordpress\Interfaces\IMetaField
     /**
      * {@inheritDoc}
      */
-    public function addField(string $name, Control $field, string $metaKeyName = null)
+    public function addField(string $name, Control $field, string $metaKeyName = null): void
     {
         // Add default name if not supplied.
         // adding underscore prevent Wp to display in custom field setup.

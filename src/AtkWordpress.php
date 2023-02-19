@@ -7,7 +7,6 @@ namespace Atk4\AtkWordpress;
 use Atk4\AtkWordpress\Components\Metabox;
 use Atk4\AtkWordpress\Controllers\ComponentController;
 use Atk4\AtkWordpress\Controllers\ModelController;
-use Atk4\AtkWordpress\Interfaces\IMetaboxField;
 use Atk4\AtkWordpress\Interfaces\IPlugin;
 use Atk4\Core\CollectionTrait;
 use Atk4\Core\ConfigTrait;
