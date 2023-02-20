@@ -87,8 +87,6 @@ class ComponentController extends AbstractController
      * Return a component from the components array
      * base on it's key value regardless of the component type.
      *
-     * @param array $components
-     *
      * @return array|mixed
      */
     public function searchComponentByKey(string $search)

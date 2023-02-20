@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Atk4\AtkWordpress\Components;
 
 use Atk4\AtkWordpress\Controllers\ComponentController;
+use Atk4\AtkWordpress\Controllers\MetaFieldController;
 use Atk4\AtkWordpress\Interfaces\IMetaboxField;
 use Atk4\AtkWordpress\Interfaces\IMetaField;
 
@@ -55,7 +56,7 @@ abstract class Metabox extends AbstractComponent implements IMetaboxField
     {
         if ($this->fieldCtrl !== null) {
             foreach ($this->fieldCtrl->getFields() as $key => $field) {
-                if (isset($_POST) && array_key_exists($field->short_name, $_POST)) {
+                if (array_key_exists($field->short_name, $_POST)) {
                     $compCtrl->savePostMetaData(
                         $postId,
                         $field->short_name,

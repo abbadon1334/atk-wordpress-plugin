@@ -12,14 +12,14 @@ interface IMetaField
     /**
      * AddFields to a Generic field object container, usually an array.
      *
-     * @param string $name        the name of the field
-     * @param View   $field       the atk field instance
-     * @param string $metaKeyName metaKey name for your field in WP db.
+     * @param string  $name        the name of the field
+     * @param Control $field       the atk field instance
+     * @param string  $metaKeyName metaKey name for your field in WP db.
      *
      * Note: using '_' in front of your meta key name, ex: _fieldName will
      * result in WP hiding the meta field in WP custom meta field box.
      */
-    public function addField(string $name, View $field, string $metaKeyName);
+    public function addField(string $name, Control $field, string $metaKeyName);
 
     /**
      * Retrieve field from container with Generic field object.

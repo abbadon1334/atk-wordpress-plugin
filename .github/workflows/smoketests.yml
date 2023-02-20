@@ -1,0 +1,48 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+on:
+  push:
+
+jobs:
+  smoke-test:
+    name: Smoke
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - 7.4
+          - 8.0
+          - 8.1
+        type:
+          - fixer
+          - stan
+          - rector
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, http
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-suggest --dev
+
+      # Runs a single command using the runners shell
+      - name: CSFixer Check
+        if: matrix.type == 'fixer'
+        run: vendor/bin/php-cs-fixer fix --dry-run --using-cache=no --diff --verbose
+
+      - name: Stan Check
+        if: matrix.type == 'stan'
+        run: vendor/bin/phpstan analyse
+
+      - name: Rector Check
+        if: matrix.type == 'rector'
+        run: vendor/bin/rector process --dry-run
